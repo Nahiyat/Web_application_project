@@ -35,6 +35,7 @@ Online Chess Platform follows a layered, API-first architecture:
 
 # Data Flow Diagram
 
+<img width="992" height="589" alt="Data-Flow-Diagram" src="https://github.com/user-attachments/assets/993021ef-ede4-49f0-9874-0378a941e8db" />
 
 
 # Security Architecture Diagram
