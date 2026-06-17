@@ -4,7 +4,7 @@
 
 | Attribute   | Value                                                           |
 | ----------- | --------------------------------------------------------------- |
-| Sample Size | 150 respondents                                                 |
+| Sample Size | 10+ respondents                                                 |
 | Segments    | Casual Players (40%), Competitive Players (35%), Students (25%) |
 | Duration    | 12 days                                                         |
 | Method      | Online structured questionnaire                                 |
