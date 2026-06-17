@@ -43,6 +43,17 @@ Cloud service providers (e.g., hosting servers), database services, university r
 | University Instructor / Reviewer           | Medium    | High     |
 | External Service Providers (Cloud/Hosting) | Low       | Medium   |
 
+
+# Engagement Strategy
+
+<img width="687" height="539" alt="Screenshot 2026-06-17 080135" src="https://github.com/user-attachments/assets/0088448e-e269-4af5-a05b-e7982b669b44" />
+
+
+
+
+
+
+
 # RACI Matrix
 
 | Deliverable                           | Product Owner | BA | Architect | Engineering | QA  | DevOps | Security | Instructor/Reviewer |
