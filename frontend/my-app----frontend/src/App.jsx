@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import WelcomePage from "./WelcomePage";
-import LoginPage from "./LoginPage";
+import WelcomePage from "./WelcomePage.jsx";
+import LoginPage from "./LoginPage.jsx";
 
 import "./index.css"; // or "./App.css" if you use that
 
