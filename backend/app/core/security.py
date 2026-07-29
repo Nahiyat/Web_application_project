@@ -15,14 +15,19 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Password Hashing
 # ----------------------------
 
+import hashlib
+
 def hash_password(password: str) -> str:
-    # bcrypt supports max 72 bytes
-    password = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
-    return pwd_context.hash(password)
+    # First hash with SHA256 (no length limit)
+    sha256_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    
+    # Then hash with bcrypt
+    return pwd_context.hash(sha256_hash)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    sha256_hash = hashlib.sha256(plain_password.encode("utf-8")).hexdigest()
+    return pwd_context.verify(sha256_hash, hashed_password)
 
 
 # ----------------------------

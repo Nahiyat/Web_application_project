@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import auth_route#, user_routes, game_routes
 from app.core.database import Base, engine
 
+from app.models import user_model  # VERY IMPORTANT
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Online Chess Platform")
 
@@ -24,3 +27,7 @@ app.include_router(auth_route.router)
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/")
+def root():
+    return {"message": "Chess API is running"}
