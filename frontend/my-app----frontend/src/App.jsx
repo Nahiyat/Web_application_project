@@ -2,48 +2,48 @@ import { useState } from "react";
 
 import WelcomePage from "./WelcomePage";
 import LoginPage from "./LoginPage";
+import PlayerDashboard from "./PlayerDashboard";
 import ChessBoard from "./ChessBoard";
 
-import "./index.css"; // or "./App.css" if you use that
+import "./index.css";
 
 function App() {
+  const [page, setPage] = useState("welcome");
 
-  const [page, setPage] = useState("welcome");
+  // Logged-in user information
+  const [user, setUser] = useState(null);
 
+  return (
+    <>
+      {/* Welcome Page */}
+      {page === "welcome" && (
+        <WelcomePage
+          onNext={() => setPage("login")}
+        />
+      )}
 
+      {/* Login Page */}
+      {page === "login" && (
+        <LoginPage
+          setUser={setUser}
+          onNext={() => setPage("dashboard")}
+        />
+      )}
 
-  return (
+      {/* Player Dashboard */}
+      {page === "dashboard" && (
+        <PlayerDashboard
+          user={user}
+          onPlay={() => setPage("chessboard")}
+        />
+      )}
 
-    <>
-
-      {page === "welcome" && (
-
-        <WelcomePage onNext={() => setPage("login")} />
-
-      )}
-
-
-
-      {page === "login" && (
-
-        <LoginPage onNext={() => setPage("chessboard")} />
-
-      )}
-
-
-
-      {page === "chessboard" && (
-
-        <ChessBoard />
-
-      )}
-
-    </>
-
-  );
-
+      {/* Chess Board */}
+      {page === "chessboard" && (
+        <ChessBoard />
+      )}
+    </>
+  );
 }
-
-
 
 export default App;
