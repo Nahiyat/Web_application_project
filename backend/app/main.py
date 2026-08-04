@@ -1,14 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth_route#, user_routes, game_routes
+
 from app.core.database import Base, engine
 
-from app.models import user_model  # VERY IMPORTANT
+# Routes
+from app.routes import auth_route
+from app.routes import tournament_route
 
+# Models (IMPORTANT)
+from app.models import user_model
+from app.models import tournament_model
+
+# Create all database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Online Chess Platform")
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -17,17 +25,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create tables on startup
-Base.metadata.create_all(bind=engine)
-
+# Include Routes
 app.include_router(auth_route.router)
-#app.include_router(user_routes.router)
-#app.include_router(game_routes.router)
 
+app.include_router(
+    tournament_route.router,
+    prefix="/api/tournaments",
+    tags=["Tournament"]
+)
+
+# Health Check
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+# Root
 @app.get("/")
 def root():
-    return {"message": "Chess API is running"}
+    return {
+        "message": "Chess API is running"
+    }
