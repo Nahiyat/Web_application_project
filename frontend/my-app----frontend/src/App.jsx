@@ -1,3 +1,4 @@
+/*
 import { useState } from "react";
 
 import WelcomePage from "./WelcomePage";
@@ -15,14 +16,14 @@ function App() {
 
   return (
     <>
-      {/* Welcome Page */}
+
       {page === "welcome" && (
         <WelcomePage
           onNext={() => setPage("login")}
         />
       )}
 
-      {/* Login Page */}
+
       {page === "login" && (
         <LoginPage
           setUser={setUser}
@@ -30,7 +31,7 @@ function App() {
         />
       )}
 
-      {/* Player Dashboard */}
+
       {page === "dashboard" && (
         <PlayerDashboard
           user={user}
@@ -38,7 +39,7 @@ function App() {
         />
       )}
 
-      {/* Chess Board */}
+
       {page === "chessboard" && (
         <ChessBoard />
       )}
@@ -47,3 +48,23 @@ function App() {
 }
 
 export default App;
+*/
+
+// src/App.jsx
+import { Routes, Route } from "react-router-dom";
+import RegisterPage from "./pages/RegisterPage";
+import PlayerDashboard from "./PlayerDashboard";
+import LoginPage from "./LoginPage";
+import Chessboard from "./Chessboard"; // Adjust path if Chessboard is in pages/
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<RegisterPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/dashboard" element={<PlayerDashboard />} />
+      <Route path="/chessboard" element={<Chessboard />} />
+    </Routes>
+  );
+}
