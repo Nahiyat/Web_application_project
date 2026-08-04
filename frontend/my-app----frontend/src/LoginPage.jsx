@@ -1,134 +1,103 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "./services/auth_service"; // adjust path if needed
+import "./LoginPage.css";
 
-function LoginPage({ onNext, setUser }) {
-
-  const [name, setName] = useState("");
+function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    // Save logged-in user
-    setUser({
-      name,
-      email,
-    });
+    try {
+      const data = await loginUser(email, password);
 
-    // Go to Dashboard
-    onNext();
+      // Store JWT so future requests are authenticated
+      localStorage.setItem("token", data.access_token);
+
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex">
-
+    <div className="login-container">
       {/* Left Side - Chess Image */}
       <div
-        className="w-1/2 hidden md:block bg-cover bg-center"
+        className="login-image"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=1200')",
         }}
-      >
-      </div>
+      ></div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full md:w-1/2 bg-gray-900 flex justify-center items-center">
+      <div className="login-form-section">
+        <div className="login-card">
+          <h2 className="login-title">Login</h2>
+          <p className="login-subtitle">Welcome back, Tactician</p>
 
-        <div className="bg-white p-8 rounded-xl shadow-2xl w-96">
-
-          <h2 className="text-3xl font-bold text-center mb-2">
-            Login
-          </h2>
-
-          <p className="text-center text-gray-600 mb-6">
-            Welcome back, Tactician
-          </p>
+          {error && <p className="error-text">{error}</p>}
 
           <form onSubmit={handleSubmit}>
-
-            {/* Name */}
-            <div className="mb-4">
-              <label className="block mb-2 font-medium">
-                Name
-              </label>
-
-              <input
-                type="text"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                required
-              />
-            </div>
-
-            {/* Email */}
-            <div className="mb-4">
-              <label className="block mb-2 font-medium">
-                Email Address
-              </label>
-
+            <div className="form-group">
+              <label>Email Address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 required
               />
             </div>
 
-            {/* Password */}
-            <div className="mb-2">
-              <label className="block mb-2 font-medium">
-                Password
-              </label>
-
+            <div className="form-group">
+              <label>Password</label>
               <input
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 required
               />
             </div>
 
-            <div className="text-right mb-5">
-              <a
-                href="#"
-                className="text-blue-600 hover:underline text-sm"
-              >
-                Forgot Password?
-              </a>
+            <div className="forgot-password">
+              <a href="#">Forgot Password?</a>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-3 rounded-lg font-semibold transition duration-300"
+              className="login-button"
+              disabled={loading}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
-
           </form>
 
-          <div className="text-center mt-5">
-
-            <p className="text-gray-600">
-              Don't have an account?
-            </p>
-
-            <button className="mt-2 text-blue-600 font-semibold hover:underline">
+          <div className="register-section">
+            <p>Don't have an account?</p>
+            <button
+              type="button"
+              className="create-account-btn"
+              onClick={() => navigate("/register")}
+            >
               Create New Account
             </button>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }
