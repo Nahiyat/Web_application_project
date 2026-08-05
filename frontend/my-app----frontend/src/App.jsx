@@ -52,6 +52,7 @@ export default App;
 
 // src/App.jsx
 import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./pages/RegisterPage";
 import PlayerDashboard from "./PlayerDashboard";
 import LoginPage from "./LoginPage";
@@ -63,8 +64,24 @@ export default function App() {
       <Route path="/" element={<RegisterPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/dashboard" element={<PlayerDashboard />} />
-      <Route path="/chessboard" element={<Chessboard />} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <PlayerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/chessboard"
+        element={
+          <ProtectedRoute>
+            <Chessboard />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

@@ -20,7 +20,8 @@ function LoginPage() {
       const data = await loginUser(email, password);
 
       // Store JWT so future requests are authenticated
-      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("atoken", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       // Redirect to dashboard
       navigate("/dashboard");
