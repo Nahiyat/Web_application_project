@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from fastapi import Body
+from app.core.security import verify_token, create_access_token
 from app.schemas.user_schema import UserRegisterRequest, UserResponse
 from app.schemas.auth_schema import LoginRequest, TokenResponse
 from app.controllers import auth_controller
@@ -15,6 +17,21 @@ def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     return auth_controller.login_user(request, db)
+
+@router.post("/refresh")
+def refresh_token(refresh_token: str = Body(..., embed=True)):
+    payload = verify_token(refresh_token, expected_type="refresh")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    new_access_token = create_access_token({"sub": user_id})
+
+    return {
+        "access_token": new_access_token,
+        "token_type": "bearer"
+    }
 
 from app.core.dependencies import get_current_user
 from app.models.user_model import User

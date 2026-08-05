@@ -26,29 +26,20 @@ def register_user(request: UserRegisterRequest, db: Session):
     db.refresh(user)
     return user
 
+from app.core.security import create_access_token, create_refresh_token
+
 def login_user(request: LoginRequest, db: Session):
     user = db.query(User).filter(User.email == request.email).first()
 
-    # Same message for "no such user" and "wrong password"
-    # so attackers cannot discover which emails are registered.
-    if user is None or user.password_hash is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
+    if not user or not verify_password(request.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    if not verify_password(request.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    access_token = create_access_token(
-        {"sub": str(user.id), "is_guest": user.is_guest}
-    )
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token({"sub": str(user.id)})
 
     return {
         "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
-        "user": user,
+        "user": user
     }
