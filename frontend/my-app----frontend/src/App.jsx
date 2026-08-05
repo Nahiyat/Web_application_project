@@ -75,7 +75,7 @@ export default function App() {
       />
 
       <Route
-        path="/chessboard"
+        path="/chessboard/:gameId"
         element={
           <ProtectedRoute>
             <Chessboard />

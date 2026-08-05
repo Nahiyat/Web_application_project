@@ -6,6 +6,7 @@ from app.core.database import Base, engine
 # Routes
 from app.routes import auth_route
 from app.routes import tournament_route
+from app.routes import matchmaking_route
 
 # Models (IMPORTANT)
 from app.models import user_model
@@ -27,6 +28,8 @@ app.add_middleware(
 
 # Include Routes
 app.include_router(auth_route.router)
+
+app.include_router(matchmaking_route.router)
 
 app.include_router(
     tournament_route.router,
