@@ -1,9 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import "../src/styles/dashboard.css";
+import { findMatch } from "./services/match_making";
 
 function PlayerDashboard({ user }) {
   const navigate = useNavigate();
   const playerName = user?.name || "Player";
+
+  const handleMatchmaking = async () => {
+    try {
+      const result = await findMatch();
+
+      if (result.matched) {
+        navigate("/chessboard/${result.game_id}");
+      } else {
+        alert("Waiting for opponent...");
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const menuItems = [
     {
@@ -75,7 +91,9 @@ function PlayerDashboard({ user }) {
             <div key={index} className="dashboard-card">
               <h3>{item.title}</h3>
               <p>{item.description}</p>
-              <button>{item.button}</button>
+              <button onClick={handleMatchmaking}>
+                  {item.button}
+                </button>
             </div>
           ))}
         </div>

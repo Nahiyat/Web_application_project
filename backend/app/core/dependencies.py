@@ -15,7 +15,7 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    payload = verify_token(credentials.credentials, expected_type="access")
+    payload = verify_token(credentials.credentials, token_type="access")
     user_id = payload.get("sub")
 
     if user_id is None:

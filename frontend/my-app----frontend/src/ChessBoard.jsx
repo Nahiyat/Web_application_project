@@ -1,4 +1,17 @@
 import "./Board.css";
+import { useParams } from "react-router-dom";
+
+function Chessboard() {
+  const { gameId } = useParams();
+
+  console.log("Game ID:", gameId);
+
+  return (
+    <div>
+      <h1>Game ID: {gameId}</h1>
+    </div>
+  );
+}
 
 import wk from "./assets/wk.png";
 import wq from "./assets/wq.png";
