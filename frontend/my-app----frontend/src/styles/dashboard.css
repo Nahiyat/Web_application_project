@@ -1,0 +1,174 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #111827;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+/* Header */
+.dashboard-header {
+  background-color: #1f2937;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  color: #facc15;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.user-info {
+  text-align: right;
+}
+
+.small-text {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.username {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Welcome Section */
+.welcome-section {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.welcome-section h2 {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.highlight {
+  color: #facc15;
+}
+
+.subtitle {
+  color: #9ca3af;
+  margin-top: 10px;
+}
+
+/* Cards */
+.cards-wrapper {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 30px 60px;
+}
+
+.cards-grid {
+  display: grid;
+  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.dashboard-card {
+  background-color: #1f2937;
+  padding: 30px;
+  border-radius: 16px;
+  transition: 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
+}
+
+.dashboard-card h3 {
+  color: #facc15;
+  margin-bottom: 15px;
+}
+
+.dashboard-card p {
+  color: #d1d5db;
+  margin-bottom: 20px;
+}
+
+.dashboard-card button {
+  width: 100%;
+  padding: 12px;
+  background-color: #facc15;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.dashboard-card button:hover {
+  background-color: #eab308;
+}
+
+/* Stats */
+.stats-wrapper {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 30px 60px;
+}
+
+.stats-wrapper h2 {
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.stat-card {
+  background-color: #1f2937;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-card h3 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.rating h3 { color: #facc15; }
+.wins h3 { color: #22c55e; }
+.losses h3 { color: #ef4444; }
+.draws h3 { color: #3b82f6; }
+
+/* Footer */
+.dashboard-footer {
+  border-top: 1px solid #374151;
+  padding: 20px 30px;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-btn {
+  background-color: #ef4444;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: #dc2626;
+}
