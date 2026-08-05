@@ -1,8 +1,14 @@
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.models.user_model import User
+from app.schemas.auth_schema import LoginRequest
 from app.schemas.user_schema import UserRegisterRequest
-from app.core.security import hash_password
 
 def register_user(request: UserRegisterRequest, db: Session):
     existing = db.query(User).filter(User.email == request.email).first()
@@ -19,3 +25,21 @@ def register_user(request: UserRegisterRequest, db: Session):
     db.commit()
     db.refresh(user)
     return user
+
+from app.core.security import create_access_token, create_refresh_token
+
+def login_user(request: LoginRequest, db: Session):
+    user = db.query(User).filter(User.email == request.email).first()
+
+    if not user or not verify_password(request.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token({"sub": str(user.id)})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": user
+    }

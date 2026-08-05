@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function PlayerDashboard({ user }) {
+  const navigate = useNavigate();
+  
   const playerName = user?.name || "Player";
 
   const menuItems = [
@@ -146,7 +150,10 @@ function PlayerDashboard({ user }) {
             © 2026 Online Chess Platform
           </p>
 
-          <button className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg font-semibold transition">
+          <button className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg font-semibold transition"
+            onClick={() => {localStorage.removeItem("token"), localStorage.removeItem("user");
+              navigate("/login");
+              }}>
             Logout
           </button>
 
