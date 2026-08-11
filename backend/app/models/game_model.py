@@ -15,3 +15,6 @@ class Game(Base):
     status = Column(String, default="active")
     fen = Column(String, default=STARTING_FEN)
     created_at = Column(DateTime, default=datetime.now())
+    winner = Column(String, nullable=True)    # "white", "black", or "draw"
+    end_reason = Column(String, nullable=True) # "checkmate", "stalemate", etc.
+    completed_at = Column(DateTime, nullable=True)

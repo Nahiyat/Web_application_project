@@ -47,7 +47,7 @@ export default function ChessBoard() {
   const { gameId } = useParams();
   const socketRef = useRef(null);
 
-  // ALL useState hooks 
+  // ALL useState hooks
   const [board, setBoard] = useState(fenToBoard(STARTING_FEN));
   const [connected, setConnected] = useState(false);
   const [yourColor, setYourColor] = useState(null);
@@ -55,16 +55,16 @@ export default function ChessBoard() {
   const [selected, setSelected] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [awaitingServer, setAwaitingServer] = useState(false);
-  const [pendingPromotion, setPendingPromotion] = useState(null);
+  const [pendingPromotion, setPendingPromotion] = useState(null); // { from, to }
 
-    useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       console.error("No auth token found");
       return;
     }
 
-    let isCancelled = false; // Prevents race conditions during StrictMode remounts
+    let isCancelled = false;
 
     const ws = new WebSocket(
       `ws://localhost:8000/ws/game/${gameId}?token=${token}`
@@ -84,25 +84,31 @@ export default function ChessBoard() {
         console.log("Received:", message);
 
         if (message.type === "state") {
-        setBoard(fenToBoard(message.fen));
+          setBoard(fenToBoard(message.fen));
+          
+          // Always derive turn from FEN to avoid "white" vs "w" bugs
+          const turnFromFen = message.fen.split(" ")[1] === "w" ? "white" : "black";
+          setTurn(turnFromFen);
+          setAwaitingServer(false);
 
-        const turnFromFen = message.fen.split(" ")[1] === "w" ? "white" : "black";
-        setTurn(turnFromFen);   // ✅ use this instead of message.turn
+          if (message.your_color) {
+            setYourColor(message.your_color);
+          }
 
-        setAwaitingServer(false);
-
-        if (message.your_color) {
-          setYourColor(message.your_color);
+          // Game over handling
+          if (message.is_game_over) {
+            const winnerText = message.winner === "draw" 
+              ? "Game is a Draw!" 
+              : `${message.winner.toUpperCase()} wins!`;
+            
+            const reasonText = message.reason ? `(${message.reason.replace(/_/g, " ")})` : "";
+            setStatusMessage(`${winnerText} ${reasonText}`);
+          } else if (message.is_check) {
+            setStatusMessage("Check!");
+          } else {
+            setStatusMessage("");
+          }
         }
-
-        if (message.is_checkmate) {
-          setStatusMessage("Checkmate!");
-        } else if (message.is_check) {
-          setStatusMessage("Check!");
-        } else {
-          setStatusMessage("");
-        }
-      }
 
         if (message.type === "error") {
           setStatusMessage(message.message);
@@ -122,7 +128,6 @@ export default function ChessBoard() {
     };
 
     ws.onerror = (err) => {
-      // Ignore handshake abortion errors caused by React StrictMode in development
       if (!isCancelled) {
         console.error("WebSocket error:", err);
       }
@@ -136,47 +141,8 @@ export default function ChessBoard() {
         ws.close();
       }
     };
-    console.log("🔄 Turn is now:", turn);
   }, [gameId]);
 
-
-  const handleSquareClick = (row, col) => {
-    if (awaitingServer) return;
-
-    const piece = board[row][col];
-    const toSquare = rowColToSquare(row, col);
-
-    // 1. If we are currently picking a promotion piece, ignore board clicks
-    if (pendingPromotion) return;
-
-    if (!selected) {
-      if (!piece) return;
-      const pieceColor = piece[0] === "w" ? "white" : "black";
-      if (pieceColor !== yourColor || yourColor !== turn) return;
-      setSelected({ row, col });
-      return;
-    }
-
-    const fromSquare = rowColToSquare(selected.row, selected.col);
-    const selectedPiece = board[selected.row][selected.col];
-
-    // 2. Check if this is a promotion move
-    // White pawn reaching row 0 OR Black pawn reaching row 7
-    const isPromotion = 
-      (selectedPiece === "wp" && row === 0) || 
-      (selectedPiece === "bp" && row === 7);
-
-    if (isPromotion) {
-      setPendingPromotion({ from: fromSquare, to: toSquare });
-      // Don't send yet! Wait for picker
-    } else {
-      sendMove(fromSquare, toSquare);
-    }
-
-    setSelected(null);
-  };
-
-  // Helper to send the move to WebSocket
   const sendMove = (from, to, promotion = "") => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const moveUCI = `${from}${to}${promotion}`;
@@ -185,8 +151,43 @@ export default function ChessBoard() {
         move: moveUCI,
       }));
       setAwaitingServer(true);
-      setPendingPromotion(null); // Clear picker
+      setPendingPromotion(null);
     }
+  };
+
+  const handleSquareClick = (row, col) => {
+    if (awaitingServer || pendingPromotion) return;
+
+    const piece = board[row][col];
+
+    if (!selected) {
+      if (!piece) return;
+      const pieceColor = piece[0] === "w" ? "white" : "black";
+
+      if (pieceColor !== yourColor || yourColor !== turn) {
+        return;
+      }
+
+      setSelected({ row, col });
+      return;
+    }
+
+    const fromSquare = rowColToSquare(selected.row, selected.col);
+    const toSquare = rowColToSquare(row, col);
+    const selectedPiece = board[selected.row][selected.col];
+
+    // Check if this is a pawn promotion
+    const isPawn = selectedPiece && selectedPiece.endsWith('p');
+    const isPromotionRank = (row === 0 || row === 7);
+
+    if (isPawn && isPromotionRank) {
+      setPendingPromotion({ from: fromSquare, to: toSquare });
+      setSelected(null);
+      return;
+    }
+
+    sendMove(fromSquare, toSquare);
+    setSelected(null);
   };
 
   return (
@@ -202,18 +203,23 @@ export default function ChessBoard() {
         {pendingPromotion && (
           <div className="promotion-overlay">
             <div className="promotion-picker">
-              {["q", "r", "b", "n"].map((p) => (
-                <img
-                  key={p}
-                  src={pieces[`${yourColor[0]}${p}`]} // e.g. 'wq' or 'bq'
-                  onClick={() => sendMove(pendingPromotion.from, pendingPromotion.to, p)}
-                  alt="promote"
-                />
-              ))}
+              <h3>Choose Promotion</h3>
+              <div className="promotion-options">
+                {["q", "r", "b", "n"].map((p) => (
+                  <img
+                    key={p}
+                    src={pieces[`${yourColor[0]}${p}`]}
+                    onClick={() => sendMove(pendingPromotion.from, pendingPromotion.to, p)}
+                    alt={`Promote to ${p}`}
+                    className="promotion-piece"
+                  />
+                ))}
+              </div>
               <button onClick={() => setPendingPromotion(null)}>Cancel</button>
             </div>
           </div>
         )}
+
         <div className="chess-board">
           {board.flat().map((piece, index) => {
             const row = Math.floor(index / 8);
