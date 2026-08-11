@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "../src/styles/dashboard.css";
 import { findMatch } from "./services/match_making";
 
@@ -6,20 +7,30 @@ function PlayerDashboard({ user }) {
   const navigate = useNavigate();
   const playerName = user?.name || "Player";
 
+  const [searching, setSearching] = useState(false);
+
   const handleMatchmaking = async () => {
+  setSearching(true);
+
+  const poll = async () => {
     try {
       const result = await findMatch();
 
       if (result.matched) {
-        navigate("/chessboard/${result.game_id}");
+        setSearching(false);
+        navigate(`/chessboard/${result.game_id}`);
       } else {
-        alert("Waiting for opponent...");
+        // 🔁 try again after 2 seconds
+        setTimeout(poll, 2000);
       }
-
     } catch (err) {
       console.error(err);
+      setSearching(false);
     }
   };
+
+  poll();
+};
 
   const menuItems = [
     {
@@ -91,9 +102,9 @@ function PlayerDashboard({ user }) {
             <div key={index} className="dashboard-card">
               <h3>{item.title}</h3>
               <p>{item.description}</p>
-              <button onClick={handleMatchmaking}>
-                  {item.button}
-                </button>
+              <button onClick={handleMatchmaking} disabled={searching}>
+                {searching ? "Searching for opponent..." : item.button}
+              </button>
             </div>
           ))}
         </div>

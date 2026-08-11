@@ -3,12 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import Base, engine
 
+from app.websocket import game_socket
+
+
 # Routes
 from app.routes import auth_route
 from app.routes import tournament_route
 from app.routes import matchmaking_route
 
-# Models (IMPORTANT)
+# Models 
 from app.models import user_model
 from app.models import tournament_model
 
@@ -30,6 +33,8 @@ app.add_middleware(
 app.include_router(auth_route.router)
 
 app.include_router(matchmaking_route.router)
+
+app.include_router(game_socket.router)
 
 app.include_router(
     tournament_route.router,
