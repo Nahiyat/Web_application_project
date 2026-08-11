@@ -2,6 +2,7 @@ from typing import Dict, List
 from fastapi import WebSocket
 
 
+
 class ConnectionManager:
     def __init__(self):
         # { game_id: [websocket1, websocket2] }
