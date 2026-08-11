@@ -51,20 +51,43 @@ export default App;
 */
 
 // src/App.jsx
-import { Routes, Route } from "react-router-dom";
+
+import { Routes, Route, useNavigate } from "react-router-dom";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./pages/RegisterPage";
 import PlayerDashboard from "./PlayerDashboard";
 import LoginPage from "./LoginPage";
-import Chessboard from "./Chessboard"; // Adjust path if Chessboard is in pages/
+import Chessboard from "./Chessboard";
+import WelcomePage from "./WelcomePage";
+
+
+// Welcome page wrapper
+function WelcomeRoute() {
+  const navigate = useNavigate();
+
+  const handleNext = () => {
+    navigate("/login");
+  };
+
+  return <WelcomePage onNext={handleNext} />;
+}
+
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<RegisterPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Welcome Page */}
+      <Route path="/" element={<WelcomeRoute />} />
+
+      {/* Login */}
       <Route path="/login" element={<LoginPage />} />
 
+      {/* Registration */}
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Protected Dashboard */}
       <Route
         path="/dashboard"
         element={
@@ -74,6 +97,7 @@ export default function App() {
         }
       />
 
+      {/* Protected Chess Game */}
       <Route
         path="/chessboard/:gameId"
         element={
@@ -82,6 +106,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
     </Routes>
   );
 }
