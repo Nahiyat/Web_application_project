@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import "./Board.css";
 
 import wk from "./assets/wk.png";
@@ -9,7 +8,6 @@ import wr from "./assets/wr.png";
 import wb from "./assets/wb.png";
 import wn from "./assets/wn.png";
 import wp from "./assets/wp.png";
-
 import bk from "./assets/bk.png";
 import bq from "./assets/bq.png";
 import br from "./assets/br.png";
@@ -19,150 +17,223 @@ import bp from "./assets/bp.png";
 
 const pieces = { wk, wq, wr, wb, wn, wp, bk, bq, br, bb, bn, bp };
 
-const initialBoard = [
-  ["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
-  ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-  ["wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"],
-];
+const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+// FEN -> 8x8 array. Row 0 = rank 8 (black side), matching visual top row.
+function fenToBoard(fen) {
+  const placement = fen.split(" ")[0];
+  return placement.split("/").map((rowStr) => {
+    const row = [];
+    for (const char of rowStr) {
+      if (/\d/.test(char)) {
+        row.push(...Array(parseInt(char, 10)).fill(null));
+      } else {
+        const color = char === char.toUpperCase() ? "w" : "b";
+        row.push(`${color}${char.toLowerCase()}`);
+      }
+    }
+    return row;
+  });
+}
+
+// {row, col} -> "e4"
+function rowColToSquare(row, col) {
+  const file = String.fromCharCode("a".charCodeAt(0) + col);
+  const rank = 8 - row;
+  return `${file}${rank}`;
+}
 
 export default function ChessBoard() {
   const { gameId } = useParams();
   const socketRef = useRef(null);
 
-  const [board, setBoard] = useState(initialBoard);
+  // ALL useState hooks
+  const [board, setBoard] = useState(fenToBoard(STARTING_FEN));
   const [connected, setConnected] = useState(false);
+  const [yourColor, setYourColor] = useState(null);
+  const [turn, setTurn] = useState("white");
+  const [selected, setSelected] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [awaitingServer, setAwaitingServer] = useState(false);
+  const [pendingPromotion, setPendingPromotion] = useState(null); // { from, to }
 
-    useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       console.error("No auth token found");
       return;
     }
 
-    // Initialize the socket
+    let isCancelled = false;
+
     const ws = new WebSocket(
       `ws://localhost:8000/ws/game/${gameId}?token=${token}`
     );
 
     ws.onopen = () => {
-      console.log("✅ WebSocket connected");
-      setConnected(true);
+      if (!isCancelled) {
+        console.log("✅ WebSocket connected");
+        setConnected(true);
+      }
     };
 
     ws.onmessage = (event) => {
+      if (isCancelled) return;
       try {
         const message = JSON.parse(event.data);
         console.log("Received:", message);
 
-        if (message.type === "move") {
-          const moveStr = message.data.move; // e.g. "e2e4"
-          setBoard((prevBoard) => applyMove(prevBoard, moveStr));
+        if (message.type === "state") {
+          setBoard(fenToBoard(message.fen));
+          
+          // Always derive turn from FEN to avoid "white" vs "w" bugs
+          const turnFromFen = message.fen.split(" ")[1] === "w" ? "white" : "black";
+          setTurn(turnFromFen);
+          setAwaitingServer(false);
+
+          if (message.your_color) {
+            setYourColor(message.your_color);
+          }
+
+          // Game over handling
+          if (message.is_game_over) {
+            const winnerText = message.winner === "draw" 
+              ? "Game is a Draw!" 
+              : `${message.winner.toUpperCase()} wins!`;
+            
+            const reasonText = message.reason ? `(${message.reason.replace(/_/g, " ")})` : "";
+            setStatusMessage(`${winnerText} ${reasonText}`);
+          } else if (message.is_check) {
+            setStatusMessage("Check!");
+          } else {
+            setStatusMessage("");
+          }
+        }
+
+        if (message.type === "error") {
+          setStatusMessage(message.message);
+          setSelected(null);
+          setAwaitingServer(false);
         }
       } catch (e) {
-        console.log("Received non-json message:", event.data);
+        console.error("Error parsing message", e);
       }
     };
 
     ws.onclose = (event) => {
-      // code 1000 is a normal closure (like when we leave the page)
-      if (event.code !== 1000) {
-        console.log("❌ WebSocket closed unexpectedly", event);
-      } else {
-        console.log("ℹ️ WebSocket closed normally");
+      if (!isCancelled) {
+        console.log("❌ WebSocket closed", event.code);
+        setConnected(false);
       }
-      setConnected(false);
     };
 
     ws.onerror = (err) => {
-      // This will still fire during StrictMode refreshes, but we can ignore it
-      console.error("WebSocket error details:", err);
+      if (!isCancelled) {
+        console.error("WebSocket error:", err);
+      }
     };
 
     socketRef.current = ws;
 
-    // CLEANUP FUNCTION
     return () => {
+      isCancelled = true;
       if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-        console.log("Cleaning up WebSocket connection...");
-        ws.close(1000); // 1000 is "Normal Closure"
+        ws.close();
       }
     };
   }, [gameId]);
 
-    // Converts "e2" -> { row: 6, col: 4 }
-function squareToRowCol(square) {
-  const file = square[0]; // 'a' - 'h'
-  const rank = square[1]; // '1' - '8'
+  const sendMove = (from, to, promotion = "") => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      const moveUCI = `${from}${to}${promotion}`;
+      socketRef.current.send(JSON.stringify({
+        type: "move",
+        move: moveUCI,
+      }));
+      setAwaitingServer(true);
+      setPendingPromotion(null);
+    }
+  };
 
-  const col = file.charCodeAt(0) - "a".charCodeAt(0); // a=0, b=1, ... h=7
-  const row = 8 - parseInt(rank, 10); // rank 8 = row 0, rank 1 = row 7
+  const handleSquareClick = (row, col) => {
+    if (awaitingServer || pendingPromotion) return;
 
-  return { row, col };
-}
+    const piece = board[row][col];
 
-// Applies a move like "e2e4" to a board array, returns NEW board
-function applyMove(board, moveStr) {
-  const from = moveStr.slice(0, 2); // "e2"
-  const to = moveStr.slice(2, 4);   // "e4"
+    if (!selected) {
+      if (!piece) return;
+      const pieceColor = piece[0] === "w" ? "white" : "black";
 
-  const fromPos = squareToRowCol(from);
-  const toPos = squareToRowCol(to);
+      if (pieceColor !== yourColor || yourColor !== turn) {
+        return;
+      }
 
-  // Deep copy so React detects the state change
-  const newBoard = board.map(row => [...row]);
+      setSelected({ row, col });
+      return;
+    }
 
-  const piece = newBoard[fromPos.row][fromPos.col];
-  newBoard[fromPos.row][fromPos.col] = null;
-  newBoard[toPos.row][toPos.col] = piece;
+    const fromSquare = rowColToSquare(selected.row, selected.col);
+    const toSquare = rowColToSquare(row, col);
+    const selectedPiece = board[selected.row][selected.col];
 
-  return newBoard;
-}
+    // Check if this is a pawn promotion
+    const isPawn = selectedPiece && selectedPiece.endsWith('p');
+    const isPromotionRank = (row === 0 || row === 7);
 
-    const sendMove = () => {
-  const moveStr = "e2e4";
+    if (isPawn && isPromotionRank) {
+      setPendingPromotion({ from: fromSquare, to: toSquare });
+      setSelected(null);
+      return;
+    }
 
-  if (socketRef.current?.readyState === WebSocket.OPEN) {
-    const payload = {
-      type: "move",
-      move: moveStr,
-      gameId: gameId,
-    };
-
-    socketRef.current.send(JSON.stringify(payload));
-
-    // ✅ Apply immediately on sender's own board too
-    setBoard((prevBoard) => applyMove(prevBoard, moveStr));
-
-    console.log("✅ Move sent:", payload);
-  } else {
-    console.warn("Socket not open yet");
-  }
-};
+    sendMove(fromSquare, toSquare);
+    setSelected(null);
+  };
 
   return (
     <div className="chess-container">
       <p>Game ID: {gameId}</p>
       <p>Status: {connected ? "Connected" : "Connecting..."}</p>
+      <p>You are: {yourColor ?? "..."}</p>
+      <p>Turn: {turn}</p>
+      {statusMessage && <p className="status-message">{statusMessage}</p>}
 
-      <button onClick={sendMove}>Send Test Move</button>
+      <div className="wood-frame" style={{ position: "relative" }}>
+        {/* PROMOTION PICKER OVERLAY */}
+        {pendingPromotion && (
+          <div className="promotion-overlay">
+            <div className="promotion-picker">
+              <h3>Choose Promotion</h3>
+              <div className="promotion-options">
+                {["q", "r", "b", "n"].map((p) => (
+                  <img
+                    key={p}
+                    src={pieces[`${yourColor[0]}${p}`]}
+                    onClick={() => sendMove(pendingPromotion.from, pendingPromotion.to, p)}
+                    alt={`Promote to ${p}`}
+                    className="promotion-piece"
+                  />
+                ))}
+              </div>
+              <button onClick={() => setPendingPromotion(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
 
-      <div className="wood-frame">
         <div className="chess-board">
           {board.flat().map((piece, index) => {
             const row = Math.floor(index / 8);
             const col = index % 8;
             const isLight = (row + col) % 2 === 0;
+            const isSelected = selected?.row === row && selected?.col === col;
 
             return (
               <div
                 key={index}
-                className={`square ${isLight ? "light-square" : "dark-square"}`}
+                onClick={() => handleSquareClick(row, col)}
+                className={`square ${isLight ? "light-square" : "dark-square"} ${
+                  isSelected ? "selected-square" : ""
+                }`}
               >
                 {piece && (
                   <img
