@@ -50,12 +50,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-
-<<<<<<< HEAD
   aspect-ratio: 1; /* ✅ Force perfect square shape */
-=======
-  aspect-ratio: 1;
->>>>>>> f4106b2b599d167f6339cce49a30763c1fe24017
+
 
   transition: 0.15s ease;
 }
@@ -88,7 +84,6 @@
   transform: scale(1.05);
 }
 
-<<<<<<< HEAD
 .selected-square {
   outline: 3px solid #facc15;
   outline-offset: -3px;
@@ -160,8 +155,7 @@
 .promotion-picker button:hover {
   background: #d0d0d0;
 }
-=======
->>>>>>> f4106b2b599d167f6339cce49a30763c1fe24017
+
 .test-button {
   margin: 10px 0 20px;
   padding: 10px 18px;
