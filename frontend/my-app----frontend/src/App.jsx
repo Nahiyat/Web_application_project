@@ -52,17 +52,19 @@ export default App;
 
 // src/App.jsx
 
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
-import ProtectedRoute from "./components/ProtectedRoute";
-import RegisterPage from "./pages/RegisterPage";
+// Components & Pages
+import Login from "./LoginPage";
+import Register from "./pages/RegisterPage";
 import PlayerDashboard from "./PlayerDashboard";
-import LoginPage from "./LoginPage";
-import Chessboard from "./Chessboard";
+import ChessBoard from "./ChessBoard";
+import PvCChessBoard from "./PvCChessBoard";
+import MatchHistory from "./pages/MatchHistory";
 import WelcomePage from "./WelcomePage";
 
 
-// Welcome page wrapper
 function WelcomeRoute() {
   const navigate = useNavigate();
 
@@ -74,39 +76,75 @@ function WelcomeRoute() {
 }
 
 
+// Protected Route Wrapper Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 export default function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse stored user", e);
+      }
+    }
+  }, []);
+
   return (
     <Routes>
-
-      {/* Welcome Page */}
+      {/* Public Routes */}
       <Route path="/" element={<WelcomeRoute />} />
+      <Route path="/login" element={<Login setUser={setUser} />} />
+      <Route path="/register" element={<Register />} />
 
-      {/* Login */}
-      <Route path="/login" element={<LoginPage />} />
-
-      {/* Registration */}
-      <Route path="/register" element={<RegisterPage />} />
-
-      {/* Protected Dashboard */}
+      {/* Protected Dashboard & Game Routes */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <PlayerDashboard />
+            <PlayerDashboard user={user} />
           </ProtectedRoute>
         }
       />
 
-      {/* Protected Chess Game */}
+      <Route
+        path="/pvc"
+        element={
+          <ProtectedRoute>
+            <PvCChessBoard />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/chessboard/:gameId"
         element={
           <ProtectedRoute>
-            <Chessboard />
+            <ChessBoard />
           </ProtectedRoute>
         }
       />
 
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <MatchHistory />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Default / Fallback Routes */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../src/styles/dashboard.css";
 import { findMatch } from "./services/match_making";
 
@@ -8,6 +8,56 @@ function PlayerDashboard({ user }) {
   const playerName = user?.name || "Player";
 
   const [searching, setSearching] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [stats, setStats] = useState({
+    rating: 1200,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    total_games: 0,
+    win_rate: 0,
+  });
+
+  // Fetch real-time user statistics from backend handler
+  useEffect(() => {
+    let isSubscribed = true;
+
+    async function fetchDashboardStats() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:8000/api/dashboard/player", {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (isSubscribed) {
+            setStats({
+              rating: user?.rating || 1200,
+              wins: data.wins,
+              losses: data.losses,
+              draws: data.draws,
+              total_games: data.total_games,
+              win_rate: data.win_rate,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard statistics:", err);
+      } finally {
+        if (isSubscribed) setLoadingStats(false);
+      }
+    }
+
+    fetchDashboardStats();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [user]);
 
   const handleMatchmaking = async () => {
     setSearching(true);
@@ -42,11 +92,11 @@ function PlayerDashboard({ user }) {
       isMatchmaking: true,
     },
     {
-      id: "friend",
-      title: "Play with Friend",
-      description: "Invite your friends for a private match.",
-      button: "Invite Friend",
-      onClick: () => console.log("Invite Friend clicked"),
+      id: "computer",
+      title: "Play against Computer",
+      description: "Play with computer in a match.",
+      button: "Player Vs Computer",
+      onClick: () => navigate("/pvc"),
     },
     {
       id: "tournament",
@@ -128,22 +178,22 @@ function PlayerDashboard({ user }) {
 
         <div className="stats-grid">
           <div className="stat-card rating">
-            <h3>1250</h3>
+            <h3>{loadingStats ? "..." : stats.rating}</h3>
             <p>Rating</p>
           </div>
 
           <div className="stat-card wins">
-            <h3>42</h3>
+            <h3>{loadingStats ? "..." : stats.wins}</h3>
             <p>Wins</p>
           </div>
 
           <div className="stat-card losses">
-            <h3>18</h3>
+            <h3>{loadingStats ? "..." : stats.losses}</h3>
             <p>Losses</p>
           </div>
 
           <div className="stat-card draws">
-            <h3>8</h3>
+            <h3>{loadingStats ? "..." : stats.draws}</h3>
             <p>Draws</p>
           </div>
         </div>

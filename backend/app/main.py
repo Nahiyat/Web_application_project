@@ -10,6 +10,8 @@ from app.websocket import game_socket
 from app.routes import auth_route
 from app.routes import tournament_route
 from app.routes import matchmaking_route
+from app.routes import pvc_routes
+from app.routes import dashboard_route
 
 # Models 
 from app.models import user_model
@@ -35,6 +37,10 @@ app.include_router(auth_route.router)
 app.include_router(matchmaking_route.router)
 
 app.include_router(game_socket.router)
+
+app.include_router(pvc_routes.router)
+
+app.include_router(dashboard_route.router)
 
 app.include_router(
     tournament_route.router,
