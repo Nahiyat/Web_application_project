@@ -10,77 +10,83 @@ function PlayerDashboard({ user }) {
   const [searching, setSearching] = useState(false);
 
   const handleMatchmaking = async () => {
-  setSearching(true);
+    setSearching(true);
 
-  const poll = async () => {
-    try {
-      const result = await findMatch();
+    const poll = async () => {
+      try {
+        const result = await findMatch();
 
-      if (result.matched) {
+        if (result.matched) {
+          setSearching(false);
+          navigate(`/chessboard/${result.game_id}`);
+        } else {
+          // 🔁 try again after 2 seconds
+          setTimeout(poll, 2000);
+        }
+      } catch (err) {
+        console.error(err);
         setSearching(false);
-        navigate(`/chessboard/${result.game_id}`);
-      } else {
-        // 🔁 try again after 2 seconds
-        setTimeout(poll, 2000);
       }
-    } catch (err) {
-      console.error(err);
-      setSearching(false);
-    }
-  };
+    };
 
-  poll();
-};
+    poll();
+  };
 
   const menuItems = [
     {
+      id: "matchmaking",
       title: "Play with Players",
       description: "Challenge players from around the world.",
       button: "Play Now",
+      onClick: handleMatchmaking,
+      isMatchmaking: true,
     },
     {
+      id: "friend",
       title: "Play with Friend",
       description: "Invite your friends for a private match.",
       button: "Invite Friend",
+      onClick: () => console.log("Invite Friend clicked"),
     },
     {
+      id: "tournament",
       title: "Tournament",
       description: "Join exciting online tournaments.",
       button: "Join Tournament",
+      onClick: () => console.log("Tournament clicked"),
     },
     {
+      id: "history",
       title: "Match History",
       description: "View all your previous matches.",
       button: "View History",
+      onClick: () => navigate("/history"),
     },
     {
+      id: "rankings",
       title: "Rankings",
       description: "See your position on the leaderboard.",
       button: "View Rankings",
+      onClick: () => navigate("/rankings"),
     },
     {
+      id: "profile",
       title: "Profile",
       description: "Update your profile information.",
       button: "Open Profile",
+      onClick: () => navigate("/profile"),
     },
   ];
 
   return (
     <div className="dashboard-container">
-
       <header className="dashboard-header">
         <div className="header-content">
-          <h1 className="logo">
-            Online Chess Platform
-          </h1>
+          <h1 className="logo">Online Chess Platform</h1>
 
           <div className="user-info">
-            <p className="small-text">
-              Logged in as
-            </p>
-            <p className="username">
-              {playerName}
-            </p>
+            <p className="small-text">Logged in as</p>
+            <p className="username">{playerName}</p>
           </div>
         </div>
       </header>
@@ -98,15 +104,22 @@ function PlayerDashboard({ user }) {
 
       <div className="cards-wrapper">
         <div className="cards-grid">
-          {menuItems.map((item, index) => (
-            <div key={index} className="dashboard-card">
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-              <button onClick={handleMatchmaking} disabled={searching}>
-                {searching ? "Searching for opponent..." : item.button}
-              </button>
-            </div>
-          ))}
+          {menuItems.map((item) => {
+            const isSearching = item.isMatchmaking && searching;
+
+            return (
+              <div key={item.id} className="dashboard-card">
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+                <button
+                  onClick={item.onClick}
+                  disabled={searching && !item.isMatchmaking}
+                >
+                  {isSearching ? "Searching for opponent..." : item.button}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -145,7 +158,7 @@ function PlayerDashboard({ user }) {
             onClick={() => {
               localStorage.removeItem("token");
               localStorage.removeItem("user");
-              localStorage.removeItem("refresh_token")
+              localStorage.removeItem("refresh_token");
               navigate("/login");
             }}
           >
@@ -153,7 +166,6 @@ function PlayerDashboard({ user }) {
           </button>
         </div>
       </footer>
-
     </div>
   );
 }
