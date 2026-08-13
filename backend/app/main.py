@@ -8,14 +8,15 @@ from app.websocket import game_socket
 
 # Routes
 from app.routes import auth_route
-from app.routes import tournament_route
+
 from app.routes import matchmaking_route
 from app.routes import pvc_routes
 from app.routes import dashboard_route
+from app.routes import ranking_route
 
 # Models 
 from app.models import user_model
-from app.models import tournament_model
+
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
@@ -42,11 +43,8 @@ app.include_router(pvc_routes.router)
 
 app.include_router(dashboard_route.router)
 
-app.include_router(
-    tournament_route.router,
-    prefix="/api/tournaments",
-    tags=["Tournament"]
-)
+app.include_router(ranking_route.router)
+
 
 # Health Check
 @app.get("/health")
@@ -59,3 +57,4 @@ def root():
     return {
         "message": "Chess API is running"
     }
+    
