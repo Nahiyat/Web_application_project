@@ -52,6 +52,115 @@ export default App;
 
 // src/App.jsx
 
+
+/*
+import { useState } from "react";
+
+import WelcomePage from "./WelcomePage";
+import LoginPage from "./LoginPage";
+import PlayerDashboard from "./PlayerDashboard";
+import ChessBoard from "./ChessBoard";
+
+import "./index.css";
+
+function App() {
+  const [page, setPage] = useState("welcome");
+
+  // Logged-in user information
+  const [user, setUser] = useState(null);
+
+  return (
+    <>
+
+      {page === "welcome" && (
+        <WelcomePage
+          onNext={() => setPage("login")}
+        />
+      )}
+
+
+      {page === "login" && (
+        <LoginPage
+          setUser={setUser}
+          onNext={() => setPage("dashboard")}
+        />
+      )}
+
+
+      {page === "dashboard" && (
+        <PlayerDashboard
+          user={user}
+          onPlay={() => setPage("chessboard")}
+        />
+      )}
+
+
+      {page === "chessboard" && (
+        <ChessBoard />
+      )}
+    </>
+  );
+}
+
+export default App;
+*/
+
+
+
+/*
+import { useState } from "react";
+
+import WelcomePage from "./WelcomePage";
+import LoginPage from "./LoginPage";
+import PlayerDashboard from "./PlayerDashboard";
+import ChessBoard from "./ChessBoard";
+
+import "./index.css";
+
+function App() {
+  const [page, setPage] = useState("welcome");
+
+  // Logged-in user information
+  const [user, setUser] = useState(null);
+
+  return (
+    <>
+
+      {page === "welcome" && (
+        <WelcomePage
+          onNext={() => setPage("login")}
+        />
+      )}
+
+
+      {page === "login" && (
+        <LoginPage
+          setUser={setUser}
+          onNext={() => setPage("dashboard")}
+        />
+      )}
+
+
+      {page === "dashboard" && (
+        <PlayerDashboard
+          user={user}
+          onPlay={() => setPage("chessboard")}
+        />
+      )}
+
+
+      {page === "chessboard" && (
+        <ChessBoard />
+      )}
+    </>
+  );
+}
+
+export default App;
+*/
+
+// src/App.jsx
+
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -63,6 +172,7 @@ import ChessBoard from "./ChessBoard";
 import PvCChessBoard from "./PvCChessBoard";
 import MatchHistory from "./pages/MatchHistory";
 import WelcomePage from "./WelcomePage";
+import RankingPage from "./pages/RankingPage";
 
 
 function WelcomeRoute() {
@@ -143,8 +253,18 @@ export default function App() {
         }
       />
 
+      <Route 
+          path="/ranking" 
+          element={
+            <ProtectedRoute>
+              <RankingPage />
+            </ProtectedRoute>
+          } 
+        />
+
       {/* Default / Fallback Routes */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }
+
