@@ -1,7 +1,9 @@
+
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../src/styles/dashboard.css";
 import { findMatch } from "./services/match_making";
+import RankingPage from './pages/RankingPage';
 
 function PlayerDashboard({ user }) {
   const navigate = useNavigate();
@@ -117,7 +119,7 @@ function PlayerDashboard({ user }) {
       title: "Rankings",
       description: "See your position on the leaderboard.",
       button: "View Rankings",
-      onClick: () => navigate("/rankings"),
+      onClick: () => navigate("/ranking"),
     },
     {
       id: "profile",
